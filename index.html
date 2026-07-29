@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CBOC Toolkit</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f0f4f8; color: #1a2b3c; line-height: 1.5; min-height: 100vh;
+  }
+  header {
+    background: linear-gradient(135deg, #003e73 0%, #0a5ca8 100%);
+    color: #fff; padding: 32px 24px 28px; box-shadow: 0 2px 16px rgba(0,0,0,0.12);
+  }
+  .header-inner { max-width: 1120px; margin: 0 auto; }
+  header h1 { font-size: 2rem; font-weight: 700; letter-spacing: 0.4px; }
+  header p { margin-top: 6px; opacity: 0.9; font-size: 0.95rem; }
+
+  .search-wrap { max-width: 1120px; margin: 24px auto 0; padding: 0 24px; }
+  #search {
+    width: 100%; padding: 14px 18px; font-size: 1rem; border: 1px solid #cfdbe6;
+    border-radius: 12px; outline: none; background: #fff; transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  #search:focus { border-color: #0a5ca8; box-shadow: 0 0 0 3px rgba(10,92,168,0.14); }
+
+  main { max-width: 1120px; margin: 0 auto; padding: 26px 24px 60px; }
+
+  .section-title {
+    font-size: 1.2rem; font-weight: 700; color: #003e73; margin: 28px 0 14px;
+    display: flex; align-items: center; gap: 10px; padding-bottom: 8px; border-bottom: 2px solid #d6e2ee;
+  }
+  .section-title .em { font-size: 1.25rem; }
+  .section-title .count {
+    font-size: 0.75rem; font-weight: 600; background: #e1ecf7; color: #0a5ca8;
+    padding: 2px 10px; border-radius: 12px; margin-left: auto;
+  }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); gap: 14px; }
+  .card {
+    display: flex; align-items: center; gap: 13px; background: #fff; border: 1px solid #e6edf4;
+    border-radius: 13px; padding: 15px 16px; text-decoration: none; color: inherit;
+    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+  }
+  .card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,62,115,0.12); border-color: #b9d2e8; }
+  .card .icon {
+    flex-shrink: 0; width: 42px; height: 42px; border-radius: 11px; background: #eef4fb;
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
+  }
+  .card .name { font-weight: 600; font-size: 0.94rem; color: #1a2b3c; }
+
+  /* accent per section */
+  .s-pharm .icon { background: #eaf6ef; }
+  .s-nursing .icon { background: #fbf4e2; }
+  .s-howto .icon { background: #f0ebfb; }
+  .s-guide .icon { background: #e7f0fb; }
+
+  .badge-guide {
+    display: inline-block; font-size: 0.6rem; font-weight: 700; color: #6b46c1;
+    background: #f0ebfb; padding: 1px 6px; border-radius: 6px; margin-top: 3px; text-transform: uppercase; letter-spacing: 0.3px;
+  }
+
+  .no-results { text-align: center; color: #6b7c8d; padding: 40px; font-size: 1.05rem; display: none; }
+  footer { text-align: center; color: #8494a3; font-size: 0.8rem; padding: 20px; }
+
+  @media (max-width: 500px) { header h1 { font-size: 1.55rem; } .grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <h1>CBOC Toolkit</h1>
+      <p>Tools, reports, directories, and how-to guides — all in one place.</p>
+    </div>
+  </header>
+
+  <div class="search-wrap">
+    <input type="text" id="search" placeholder="🔍  Search tools and guides…" autocomplete="off">
+  </div>
+
+  <main id="content"></main>
+  <div class="no-results" id="noResults">Nothing matches your search.</div>
+
+  <footer>CBOC Toolkit · Links open in a new tab</footer>
+
+<script>
+  const data = [
+    {
+      section: "VA Tools", em: "🏛️", cls: "s-va",
+      links: [
+        { name: "VA Policy Library", icon: "📚", url: "https://ba.va.gov/policy/" },
+        { name: "Secure Messaging", icon: "✉️", url: "https://smclinician.myhealth.va.gov/home" },
+        { name: "Document Correction LEAF Request", icon: "📝", url: "https://leaf.va.gov/VISN2/528A7/cprs_documentation_corrections/" },
+        { name: "DBRS", icon: "🗂️", url: "https://cfm.vssc.med.va.gov/dbr/main.cfm" },
+        { name: "JPSR", icon: "🛡️", url: "https://ias.csd.disa.mil/amserver/RUI/?realm=/pki&goto=https://patientsafety.csd.disa.mil:443/" },
+        { name: "VA GPT", icon: "🤖", url: "https://vagpt.va.gov/" },
+        { name: "Goblin Tools", icon: "🧰", url: "https://goblin.tools/Formalizer" },
+        { name: "VVC Now", icon: "🎥", url: "https://staff.apps.va.gov/vvc-now/" },
+        { name: "VA Dental Insurance Program", icon: "🦷", url: "https://brookecarter1.github.io/VADIP/" }
+      ]
+    },
+    {
+      section: "Pharmacy Tools", em: "💊", cls: "s-pharm",
+      links: [
+        { name: "CMOP", icon: "💊", url: "https://vaww.cmop.med.va.gov/CMOPNationalWebApplication/" },
+        { name: "VA Formulary", icon: "📖", url: "https://www.va.gov/formularyadvisor/" },
+        { name: "CC Billing Card for Non-VA Pharmacy", icon: "💳", url: "https://www.va.gov/COMMUNITYCARE/docs/programs/OCC-Billing-Information-Card.pdf" },
+        { name: "SYR Pharmacy Recalls & Shortages", icon: "⚠️", url: "https://dvagov.sharepoint.com/:x:/r/sites/VHASYR/pharm/_layouts/15/doc2.aspx?sourcedoc=%7BA64F93BB-36F7-41D5-BFD7-808EAA1F5B32%7D&file=Pharmacy%20Dashboard-%20Pt%20Level%20Recalls%20%26%20Shortages.xlsx&action=default&mobileredirect=true&web=1&cid=A2AEE6A4-7064-4E90-A778-B71B790D57E8&wdLOR=cB10FAA14-7E60-4681-9380-0ED2B11040AC" }
+      ]
+    },
+    {
+      section: "Nursing Tools", em: "🩺", cls: "s-nursing",
+      links: [
+        { name: "Epworth Sleepiness Calculator", icon: "😴", url: "https://www.thecalculator.co/health/Epworth-Sleepiness-Scale-Calculator-905.html" },
+        { name: "STOP-BANG Calculator", icon: "🛌", url: "https://www.mdcalc.com/calc/3992/stop-bang-score-obstructive-sleep-apnea" },
+        { name: "Printable Mini Mental Exam", icon: "🧠", url: "https://meded.temertymedicine.utoronto.ca/sites/default/files/assets/resource/document/mini-mental-state-examinationmmse.pdf" },
+        { name: "iMed Consent", icon: "✍️", url: "https://vaww.icw.va.gov/iMed4Web/default.aspx" },
+        { name: "2 Day D/C", icon: "📅", url: "https://reports.vssc.med.va.gov/ReportServer/Pages/ReportViewer.aspx?/PC/Almanac/DailyDischFUOrig&rs:Command=Render" },
+        { name: "Primary Care Almanac", icon: "📊", url: "https://app.powerbigov.us/groups/me/apps/ebd3fe49-7376-48ba-b91e-096419a17a0d/reports/8d200e48-db33-4c84-abb9-1f673b4e3bbe/ReportSectionb13fc6a68216f28e6f50?ctid=e95f1b23-abaf-45ee-821d-b7ab251ab3bf" },
+        { name: "VSSC Reports", icon: "📈", url: "https://vssc.med.va.gov/VSSCMainApp/" },
+        { name: "PAP Status Report", icon: "🩺", url: "https://reports.vssc.med.va.gov/ReportServer/Pages/ReportViewer.aspx?/PC/WomensHealth/Pap+Status+Report&rs:Command=Render" },
+        { name: "EQM", icon: "✅", url: "https://eqm.va.gov/COR/#/home" },
+        { name: "Naloxone", icon: "🚑", url: "https://vaww.pbi.cdw.va.gov/PBIRS/Pages/ReportViewer.aspx?/GPE/PBM_AD/SSRS/OEND/OENDDashboard" },
+        { name: "VCM (Virtual Care Manager)", icon: "🎥", url: "https://staff.apps.va.gov/vvc-manager/patient/appointments" },
+        { name: "PACT Patient Huddle Planning Tool", icon: "👥", url: "https://reports.vssc.med.va.gov/ReportServer/Pages/ReportViewer.aspx?%2fPC%2fAlmanac%2fPACTFutureApptClinicList&rs:Command=Render" },
+        { name: "CAN Score", icon: "🎯", url: "https://reports.vssc.med.va.gov/ReportServer/Pages/ReportViewer.aspx?%2fPC%2fAlmanacv22%2fCareAssessmentNeedScore" },
+        { name: "Medication Renewal Report", icon: "🔄", url: "https://reports.vssc.med.va.gov/ReportServer/Pages/ReportViewer.aspx?%2fPC%2fAlmanac%2fPACTMedicationExhaustionReport&rs:Command=Render" }
+      ]
+    },
+    {
+      section: "CPRS Quick How-Tos", em: "💡", cls: "s-howto",
+      links: [
+        { name: "How to Assign a Surrogate", icon: "🔁", url: "https://dvagov.sharepoint.com/:p:/r/sites/vasyracuseemrtipsandtricks/_layouts/15/Doc.aspx?sourcedoc=%7B1F9D5CEF-2B2C-466D-9D46-3FF4F50DC7BF%7D&file=Assigning%20a%20Surrogate.ppt&action=edit&mobileredirect=true" },
+        { name: "Clinical Reminder Resolution", icon: "⏰", url: "https://dvagov.sharepoint.com/:p:/r/sites/vasyracuseemrtipsandtricks/_layouts/15/Doc.aspx?sourcedoc=%7B1748ED1F-2D30-4078-A4CC-B49F44BFC465%7D&file=Clinical%20reminder%20resolution.ppt&action=edit&mobileredirect=true" },
+        { name: "Closing Encounters", icon: "✔️", url: "https://dvagov.sharepoint.com/:p:/r/sites/vasyracuseemrtipsandtricks/_layouts/15/Doc.aspx?sourcedoc=%7BBE1878C2-0FE6-4B23-AEA8-F59E050635BD%7D&file=Closing%20Enocunters.ppt&action=edit&mobileredirect=true" },
+        { name: "How to Add a Note Title", icon: "🏷️", url: "https://dvagov.sharepoint.com/:p:/r/sites/vasyracuseemrtipsandtricks/_layouts/15/Doc.aspx?sourcedoc=%7B33C56163-0FE7-405D-9513-A24D791DF2D0%7D&file=How%20to%20Add%20a%20Note%20Title.ppt&action=edit&mobileredirect=true" },
+        { name: "How to Assign a Clinic to Yourself", icon: "🏥", url: "https://dvagov.sharepoint.com/:p:/r/sites/vasyracuseemrtipsandtricks/_layouts/15/Doc.aspx?sourcedoc=%7B08E3E918-D136-4427-A433-DF41360E6050%7D&file=How%20to%20assign%20your%20clinic%20to%20yourself%20in%20CPRS.pptx&action=edit&mobileredirect=true" },
+        { name: "How to Bold Notes in CPRS", icon: "🔠", url: "https://dvagov.sharepoint.com/:p:/r/sites/vasyracuseemrtipsandtricks/_layouts/15/Doc.aspx?sourcedoc=%7B1E994FB2-EDD3-4E93-B756-61E83FFC7233%7D&file=How%20to%20bold%20your%20notes%20you%20want%20to%20see.pptx&action=edit&mobileredirect=true" },
+        { name: "How to Create Quick Order", icon: "⚡", url: "https://dvagov.sharepoint.com/:p:/r/sites/vasyracuseemrtipsandtricks/_layouts/15/Doc.aspx?sourcedoc=%7B1099600B-DE30-40D4-89F8-7F820E14E9A9%7D&file=How%20to%20create%20a%20quick%20order.pptx&action=edit&mobileredirect=true" },
+        { name: "How to Remove Note in CPRS", icon: "🗑️", url: "https://dvagov.sharepoint.com/:w:/r/sites/vasyracuseemrtipsandtricks/_layouts/15/Doc.aspx?sourcedoc=%7BD3996CA4-FD20-4D95-BD45-B1DC74B16AF3%7D&file=How%20to%20Remove%20Note%20in%20CPRS-NEW%201.docx&action=default&mobileredirect=true" },
+        { name: "Telephone Encounter Tip Sheet", icon: "📞", url: "https://dvagov.sharepoint.com/sites/vasyracuseemrtipsandtricks/Useful%20Tips%20and%20Tricks/Forms/AllItems.aspx?id=%2Fsites%2Fvasyracuseemrtipsandtricks%2FUseful%20Tips%20and%20Tricks%2FTelephone%20Encounter%20Tip%20Sheet%20Addtional%20information%2Epdf&parent=%2Fsites%2Fvasyracuseemrtipsandtricks%2FUseful%20Tips%20and%20Tricks" },
+        { name: "How to Unflag Orders", icon: "🚩", url: "https://dvagov.sharepoint.com/:p:/r/sites/vasyracuseemrtipsandtricks/_layouts/15/Doc.aspx?sourcedoc=%7BB08A8DC5-7C8C-4E15-857F-53675440C5A6%7D&file=Unflag%20Orders.pptx&action=edit&mobileredirect=true" },
+        { name: "How to Set a Self Alert", icon: "🔔", url: "https://dvagov.sharepoint.com/:p:/r/sites/vasyracuseemrtipsandtricks/_layouts/15/Doc.aspx?sourcedoc=%7B4C56FFA5-2195-4440-B680-C68269F035E9%7D&file=Using%20Tickler%20Alerts.pptx&action=edit&mobileredirect=true" }
+      ]
+    },
+    {
+      section: "Guides & Directories", em: "📘", cls: "s-guide",
+      links: [
+        { name: "How to Order Anticoag Meds", icon: "🩸", url: "https://brookecarter1.github.io/ACRequest/" },
+        { name: "How to Place a NF Request", icon: "📋", url: "https://brookecarter1.github.io/NFGuide/" },
+        { name: "How to Add a Template", icon: "📄", url: "https://brookecarter1.github.io/Template/" },
+        { name: "How to Order In-Clinic Psych Meds", icon: "💉", url: "https://brookecarter1.github.io/Psychinjection/" },
+        { name: "National Controlled Substance Note Guide", icon: "🔒", url: "https://brookecarter1.github.io/NationalControlled/" },
+        { name: "Fax Folder Management", icon: "📠", url: "https://brookecarter1.github.io/FaxFolderManagement/" },
+        { name: "Schedule Scrubbing Guide", icon: "🗂️", url: "https://brookecarter1.github.io/Scrubbing/" },
+        { name: "EQM Management Guide", icon: "📊", url: "https://brookecarter1.github.io/eqm/" },
+        { name: "Daily Huddle Guide", icon: "👥", url: "https://brookecarter1.github.io/DailyHuddle/" },
+        { name: "2 Day Discharge Process", icon: "🏥", url: "https://brookecarter1.github.io/2DayDischargeProcess/" },
+        { name: "Consult Guide", icon: "📑", url: "https://brookecarter1.github.io/ConsultGuide/" },
+        { name: "VA Copay Rates", icon: "💵", url: "https://brookecarter1.github.io/VACopay/" },
+        { name: "UC and ED Coverage", icon: "🚑", url: "https://brookecarter1.github.io/UCandED/" },
+        { name: "VISTA Printing", icon: "🖨️", url: "https://brookecarter1.github.io/VistaPrintingg/" },
+        { name: "Important Phone Numbers", icon: "☎️", url: "https://brookecarter1.github.io/ImportantPhoneNumbers/" },
+        { name: "Clinical Pharmacy Directory", icon: "💊", url: "https://brookecarter1.github.io/ClinicalPharmDirectory/" },
+        { name: "Nurse Care Manager Directory", icon: "👩‍⚕️", url: "https://brookecarter1.github.io/NCMDirectory-/" },
+        { name: "Tips and Tricks", icon: "💡", url: "https://brookecarter1.github.io/TipsandTricks/" },
+        { name: "How to Send a RI-COH Letter", icon: "✉️", url: "https://brookecarter1.github.io/RI-COHLetterInstructions/" },
+        { name: "Capturing Secure Message Workload Credit", icon: "📊", url: "https://brookecarter1.github.io/SecureMessagingWorkloadCredit/" }
+      ]
+    }
+  ];
+
+  const content = document.getElementById('content');
+
+  function render(filter = "") {
+    content.innerHTML = "";
+    const f = filter.trim().toLowerCase();
+    let anyShown = false;
+
+    data.forEach(sec => {
+      const matches = sec.links.filter(l => l.name.toLowerCase().includes(f));
+      if (!matches.length) return;
+      anyShown = true;
+
+      const title = document.createElement('div');
+      title.className = 'section-title';
+      title.innerHTML = '<span class="em">' + sec.em + '</span> ' + sec.section +
+        ' <span class="count">' + matches.length + '</span>';
+      content.appendChild(title);
+
+      const grid = document.createElement('div');
+      grid.className = 'grid ' + sec.cls;
+      matches.forEach(l => {
+        const a = document.createElement('a');
+        a.className = 'card';
+        a.href = l.url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+        a.innerHTML = '<span class="icon">' + l.icon + '</span><span class="name">' + l.name + '</span>';
+        grid.appendChild(a);
+      });
+      content.appendChild(grid);
+    });
+
+    document.getElementById('noResults').style.display = anyShown ? 'none' : 'block';
+  }
+
+  document.getElementById('search').addEventListener('input', e => render(e.target.value));
+  render();
+</script>
+</body>
+</html>
