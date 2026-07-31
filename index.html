@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CBOC Toolkit</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f8; color: #1a2b3c; line-height: 1.5; min-height: 100vh; }
+  header { background: linear-gradient(135deg, #003e73 0%, #0a5ca8 100%); color: #fff; padding: 30px 24px 26px; box-shadow: 0 2px 16px rgba(0,0,0,0.12); }
+  .header-inner { max-width: 1120px; margin: 0 auto; }
+  header h1 { font-size: 2rem; font-weight: 700; letter-spacing: 0.4px; }
+  header p { margin-top: 6px; opacity: 0.9; font-size: 0.95rem; }
+
+  .controls { max-width: 1120px; margin: 22px auto 0; padding: 0 24px; }
+  .modes { display: inline-flex; flex-wrap: wrap; background: #e2ebf3; border-radius: 12px; padding: 4px; margin-bottom: 14px; gap: 2px; }
+  .mode { border: none; background: none; cursor: pointer; font-family: inherit; font-weight: 700; font-size: 0.9rem; color: #56697c; padding: 9px 18px; border-radius: 9px; transition: all 0.15s; }
+  .mode.active { background: #fff; color: #0a5ca8; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+
+  #search { width: 100%; padding: 14px 18px; font-size: 1rem; border: 1px solid #cfdbe6; border-radius: 12px; outline: none; background: #fff; transition: border-color 0.2s, box-shadow 0.2s; }
+  #search:focus { border-color: #0a5ca8; box-shadow: 0 0 0 3px rgba(10,92,168,0.14); }
+
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .filter { background: #fff; border: 1px solid #cfdbe6; color: #445; cursor: pointer; padding: 8px 16px; border-radius: 20px; font-size: 0.88rem; font-weight: 600; transition: all 0.15s; font-family: inherit; }
+  .filter:hover { border-color: #0a5ca8; color: #0a5ca8; }
+  .filter.active { background: #0a5ca8; color: #fff; border-color: #0a5ca8; }
+
+  main { max-width: 1120px; margin: 0 auto; padding: 22px 24px 60px; }
+
+  .section { margin-bottom: 6px; }
+  .section-title { font-size: 1.15rem; font-weight: 700; color: #003e73; margin: 26px 0 14px; display: flex; align-items: center; gap: 10px; padding-bottom: 8px; border-bottom: 2px solid #d6e2ee; cursor: pointer; user-select: none; }
+  .section-title .em { font-size: 1.2rem; }
+  .section-title .count { font-size: 0.75rem; font-weight: 600; background: #e1ecf7; color: #0a5ca8; padding: 2px 10px; border-radius: 12px; }
+  .section-title .chev { margin-left: auto; font-size: 0.85rem; color: #8aa3bd; transition: transform 0.2s; }
+  .section.collapsed .chev { transform: rotate(-90deg); }
+  .section.collapsed .grid { display: none; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+  .card { position: relative; display: flex; align-items: center; gap: 13px; background: #fff; border: 1px solid #e6edf4; border-radius: 13px; padding: 15px 40px 15px 16px; text-decoration: none; color: inherit; transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s; }
+  .card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,62,115,0.12); border-color: #b9d2e8; }
+  .card .icon { flex-shrink: 0; width: 42px; height: 42px; border-radius: 11px; background: #eef4fb; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .card .name { font-weight: 600; font-size: 0.93rem; color: #1a2b3c; }
+  .star { position: absolute; top: 8px; right: 8px; background: none; border: none; cursor: pointer; font-size: 1rem; line-height: 1; padding: 4px; border-radius: 6px; color: #c7d3df; transition: color 0.15s, transform 0.15s; font-family: inherit; }
+  .star:hover { transform: scale(1.25); color: #f0b429; }
+  .star.on { color: #f0b429; }
+
+  .mostused .section-title { color: #b8860b; border-bottom-color: #f0e0b8; }
+  .mostused .card .icon { background: #fdf6e3; }
+  .mostused-empty { background: #fffdf5; border: 1px dashed #e6d59a; border-radius: 12px; padding: 18px 20px; font-size: 0.9rem; color: #8a7530; }
+
+  .router-lead { font-size: 0.9rem; color: #6b7c8d; margin: 4px 0 16px; }
+  .rrow { display: flex; align-items: center; gap: 14px; background: #fff; border: 1px solid #e6edf4; border-radius: 13px; padding: 15px 18px; margin-bottom: 11px; text-decoration: none; color: inherit; transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s; }
+  .rrow:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,62,115,0.12); border-color: #b9d2e8; }
+  .rrow .ic { flex-shrink: 0; width: 46px; height: 46px; border-radius: 12px; background: #eef4fb; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+  .rrow .body { flex: 1; min-width: 0; }
+  .rrow .want { font-weight: 700; font-size: 1rem; color: #1a2b3c; }
+  .rrow .goes { font-size: 0.83rem; color: #0a5ca8; margin-top: 3px; }
+  .rrow .goes .arrow { color: #8aa3bd; }
+  .rrow .chev { color: #c7d3df; font-size: 1.2rem; flex-shrink: 0; }
+  .rrow:hover .chev { color: #0a5ca8; }
+
+  .cl-progress { background: #fff; border: 1px solid #e8eef4; border-radius: 14px; padding: 16px 20px; margin-bottom: 22px; display: flex; align-items: center; gap: 16px; }
+  .cl-ring { position: relative; width: 56px; height: 56px; flex-shrink: 0; }
+  .cl-ring svg { transform: rotate(-90deg); }
+  .cl-ring .pct { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; color: #0a5ca8; }
+  .cl-ptxt { flex: 1; }
+  .cl-ptxt .big { font-weight: 700; color: #003e73; font-size: 1.02rem; }
+  .cl-ptxt .small { font-size: 0.85rem; color: #6b7c8d; }
+  .cl-reset { background: #fff; border: 1px solid #cfdbe6; color: #56697c; cursor: pointer; font-family: inherit; padding: 8px 14px; border-radius: 10px; font-size: 0.82rem; font-weight: 600; transition: all 0.15s; }
+  .cl-reset:hover { border-color: #c53030; color: #c53030; }
+  .cl-dateline { font-size: 0.88rem; color: #6b7c8d; margin-bottom: 14px; }
+  .cl-section { background: #fff; border: 1px solid #e8eef4; border-radius: 14px; padding: 8px 20px 12px; margin-bottom: 16px; }
+  .cl-section h2 { font-size: 1.05rem; color: #003e73; padding: 12px 0 10px; display: flex; align-items: center; gap: 10px; border-bottom: 2px solid #eef1f4; margin-bottom: 6px; }
+  .cl-section h2 .em { font-size: 1.2rem; }
+  .cl-section h2 .cbadge { margin-left: auto; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; padding: 3px 9px; border-radius: 10px; }
+  .cbadge.am { background: #eef7f1; color: #22543d; }
+  .cbadge.day { background: #eef3fb; color: #0a5ca8; }
+  .cbadge.pm { background: #f0ebfb; color: #6b46c1; }
+  .cbadge.wk { background: #fff8e6; color: #7a5c00; }
+  .cbadge.mo { background: #fbeef4; color: #9b2c6f; }
+  .cl-item { display: flex; align-items: flex-start; gap: 12px; padding: 11px 4px; cursor: pointer; border-radius: 8px; transition: background 0.12s; }
+  .cl-item:hover { background: #f7fafd; }
+  .cl-cb { width: 22px; height: 22px; border: 2px solid #c4d2e0; border-radius: 6px; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; color: #fff; font-size: 0.85rem; }
+  .cl-item.done .cl-cb { background: #2f855a; border-color: #2f855a; }
+  .cl-item.done .cl-cb::after { content: "✓"; }
+  .cl-txt { font-size: 0.95rem; color: #33465a; }
+  .cl-item.done .cl-txt { color: #9aacbd; text-decoration: line-through; }
+  .cl-txt .hint { display: block; font-size: 0.8rem; color: #8494a3; margin-top: 2px; text-decoration: none; }
+  .cl-item.done .cl-txt .hint { color: #b8c4d0; }
+  .cl-note { text-align: center; font-size: 0.82rem; color: #8494a3; margin-top: 8px; }
+
+  .no-results { text-align: center; color: #6b7c8d; padding: 40px; font-size: 1.05rem; display: none; }
+  footer { text-align: center; color: #8494a3; font-size: 0.8rem; padding: 20px; }
+
+  @media (max-width: 500px) { header h1 { font-size: 1.55rem; } .grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <h1>CBOC Toolkit</h1>
+      <p>Tools, reports, directories, and how-to guides — all in one place.</p>
+    </div>
+  </header>
+
+  <div class="controls">
+    <div class="modes">
+      <button class="mode active" id="modeBrowse">📂 Browse</button>
+      <button class="mode" id="modeRouter">🧭 I Need To…</button>
+      <button class="mode" id="modeChecklist">🗒️ Daily Checklist</button>
+      <button class="mode" id="modeManager">🧑‍💼 Manager Tools</button>
+    </div>
+    <input type="text" id="search" placeholder="🔍  Search tools and guides…" autocomplete="off">
+    <div class="filters" id="filters"></div>
+  </div>
+
+  <main id="content"></main>
+  <div class="no-results" id="noResults">Nothing matches your search.</div>
+
+  <footer>CBOC Toolkit · Links open in a new tab · ☆ Tap the star to pin to Most Used</footer>
+
+<script>
+  var mem = {};
+  var store = {
+    get: function(k){ try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch(e){ return mem[k] || null; } },
+    set: function(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){ mem[k] = v; } }
+  };
+  var starred = new Set(store.get('cboc_starred') || []);
+  function toggleStar(url){
+    if (starred.has(url)) starred.delete(url); else starred.add(url);
+    store.set('cboc_starred', [].concat(Array.from(starred)));
+    render();
+  }
+
+  var mode = "browse";
+  var activeFilter = "all";
+  var filters = [
+    { key: "all", label: "All" }, { key: "tools", label: "Tools" }, { key: "reports", label: "Reports" },
+    { key: "howtos", label: "How-Tos" }, { key: "directories", label: "Directories" },
+    { key: "benefits", label: "Benefits" }, { key: "awards", label: "Awards" }
+  ];
+
+  var data = [
+    { section: "VA Tools", em: "🏛️", cat: "tools", links: [
+      { name: "VA Policy Library", icon: "📚", url: "https://ba.va.gov/policy/" },
+      { name: "Secure Messaging", icon: "✉️", url: "https://smclinician.myhealth.va.gov/home" },
+      { name: "Document Correction LEAF Request", icon: "📝", url: "https://leaf.va.gov/VISN2/528A7/cprs_documentation_corrections/" },
+      { name: "DBRS", icon: "🗂️", url: "https://cfm.vssc.med.va.gov/dbr/main.cfm" },
+      { name: "JPSR", icon: "🛡️", url: "https://ias.csd.disa.mil/amserver/RUI/?realm=/pki&goto=https://patientsafety.csd.disa.mil:443/" },
+      { name: "VA GPT", icon: "🤖", url: "https://vagpt.va.gov/" },
+      { name: "Goblin Tools", icon: "🧰", url: "https://goblin.tools/Formalizer" },
+      { name: "VVC Now", icon: "🎥", url: "https://staff.apps.va.gov/vvc-now/" },
+      { name: "TMS Training Site", icon: "🎓", url: "https://www.tms.va.gov/SecureAuth35/" },
+      { name: "VSE Check-In", icon: "📲", url: "https://staff.apps.va.gov/pcicsv/" }
+    ]},
+    { section: "Pharmacy Tools", em: "💊", cat: "tools", links: [
+      { name: "CMOP", icon: "💊", url: "https://vaww.cmop.med.va.gov/CMOPNationalWebApplication/" },
+      { name: "VA Formulary", icon: "📖", url: "https://www.va.gov/formularyadvisor/" },
+      { name: "CC Billing Card for Non-VA Pharmacy", icon: "💳", url: "https://www.va.gov/COMMUNITYCARE/docs/programs/OCC-Billing-Information-Card.pdf" },
+      { name: "SYR Pharmacy Recalls & Shortages", icon: "⚠️", url: "https://dvagov.sharepoint.com/:x:/r/sites/VHASYR/pharm/_layouts/15/doc2.aspx?sourcedoc=%7BA64F93BB-36F7-41D5-BFD7-808EAA1F5B32%7D&file=Pharmacy%20Dashboard-%20Pt%20Level%20Recalls%20%26%20Shortages.xlsx&action=default&mobileredirect=true&web=1&cid=A2AEE6A4-7064-4E90-A778-B71B790D57E8&wdLOR=cB10FAA14-7E60-4681-9380-0ED2B11040AC" }
+    ]},
+    { section: "Nursing Tools", em: "🩺", cat: "tools", links: [
+      { name: "Epworth Sleepiness Calculator", icon: "😴", url: "https://www.thecalculator.co/health/Epworth-Sleepiness-Scale-Calculator-905.html" },
+      { name: "STOP-BANG Calculator", icon: "🛌", url: "https://www.mdcalc.com/calc/3992/stop-bang-score-obstructive-sleep-apnea" },
+      { name: "Printable Mini Mental Exam", icon: "🧠", url: "https://meded.temertymedicine.utoronto.ca/sites/default/files/assets/resource/document/mini-mental-state-examinationmmse.pdf" },
+      { name: "iMed Consent", icon: "✍️", url: "https://vaww.icw.va.gov/iMed4Web/default.aspx" },
+      { name: "VCM (Virtual Care Manager)", icon: "🎥", url: "https://staff.apps.va.gov/vvc-manager/patient/appointments" }
+    ]},
+    { section: "Reports & Metrics", em: "📈", cat: "reports", links: [
+      { name: "2 Day D/C", icon: "📅", url: "https://reports.vssc.med.va.gov/ReportServer/Pages/ReportViewer.aspx?/PC/Almanac/DailyDischFUOrig&rs:Command=Render" },
+      { name: "Primary Care Almanac", icon: "📊", url: "https://app.powerbigov.us/groups/me/apps/ebd3fe49-7376-48ba-b91e-096419a17a0d/reports/8d200e48-db33-4c84-abb9-1f673b4e3bbe/ReportSectionb13fc6a68216f28e6f50?ctid=e95f1b23-abaf-45ee-821d-b7ab251ab3bf" },
+      { name: "VSSC Reports", icon: "📈", url: "https://vssc.med.va.gov/VSSCMainApp/" },
+      { name: "PAP Status Report", icon: "🩺", url: "https://reports.vssc.med.va.gov/ReportServer/Pages/ReportViewer.aspx?/PC/WomensHealth/Pap+Status+Report&rs:Command=Render" },
+      { name: "EQM", icon: "✅", url: "https://eqm.va.gov/COR/#/home" },
+      { name: "Naloxone", icon: "🚑", url: "https://vaww.pbi.cdw.va.gov/PBIRS/Pages/ReportViewer.aspx?/GPE/PBM_AD/SSRS/OEND/OENDDashboard" },
+      { name: "PACT Patient Huddle Planning Tool", icon: "👥", url: "https://reports.vssc.med.va.gov/ReportServer/Pages/ReportViewer.aspx?%2fPC%2fAlmanac%2fPACTFutureApptClinicList&rs:Command=Render" },
+      { name: "CAN Score", icon: "🎯", url: "https://reports.vssc.med.va.gov/ReportServer/Pages/ReportViewer.aspx?%2fPC%2fAlmanacv22%2fCareAssessmentNeedScore" },
+      { name: "Medication Renewal Report", icon: "🔄", url: "https://reports.vssc.med.va.gov/ReportServer/Pages/ReportViewer.aspx?%2fPC%2fAlmanac%2fPACTMedicationExhaustionReport&rs:Command=Render" }
+    ]},
+    { section: "CPRS Quick How-Tos", em: "💡", cat: "howtos", links: [
+      { name: "How to Assign a Surrogate", icon: "🔁", url: "https://dvagov.sharepoint.com/:p:/r/sites/vasyracuseemrtipsandtricks/_layouts/15/Doc.aspx?sourcedoc=%7B1F9D5CEF-2B2C-466D-9D46-3FF4F50DC7BF%7D&file=Assigning%20a%20Surrogate.ppt&action=edit&mobileredirect=true" },
+      { name: "Clinical Reminder Resolution", icon: "⏰", url: "https://dvagov.sharepoint.com/:p:/r/sites/vasyracuseemrtipsandtricks/_layouts/15/Doc.aspx?sourcedoc=%7B1748ED1F-2D30-4078-A4CC-B49F44BFC465%7D&file=Clinical%20reminder%20resolution.ppt&action=edit&mobileredirect=true" },
+      { name: "Closing Encounters", icon: "✔️", url: "https://dvagov.sharepoint.com/:p:/r/sites/vasyracuseemrtipsandtricks/_layouts/15/Doc.aspx?sourcedoc=%7BBE1878C2-0FE6-4B23-AEA8-F59E050635BD%7D&file=Closing%20Enocunters.ppt&action=edit&mobileredirect=true" },
+      { name: "How to Add a Note Title", icon: "🏷️", url: "https://dvagov.sharepoint.com/:p:/r/sites/vasyracuseemrtipsandtricks/_layouts/15/Doc.aspx?sourcedoc=%7B33C56163-0FE7-405D-9513-A24D791DF2D0%7D&file=How%20to%20Add%20a%20Note%20Title.ppt&action=edit&mobileredirect=true" },
+      { name: "How to Assign a Clinic to Yourself", icon: "🏥", url: "https://dvagov.sharepoint.com/:p:/r/sites/vasyracuseemrtipsandtricks/_layouts/15/Doc.aspx?sourcedoc=%7B08E3E918-D136-4427-A433-DF41360E6050%7D&file=How%20to%20assign%20your%20clinic%20to%20yourself%20in%20CPRS.pptx&action=edit&mobileredirect=true" },
+      { name: "How to Bold Notes in CPRS", icon: "🔠", url: "https://dvagov.sharepoint.com/:p:/r/sites/vasyracuseemrtipsandtricks/_layouts/15/Doc.aspx?sourcedoc=%7B1E994FB2-EDD3-4E93-B756-61E83FFC7233%7D&file=How%20to%20bold%20your%20notes%20you%20want%20to%20see.pptx&action=edit&mobileredirect=true" },
+      { name: "How to Create Quick Order", icon: "⚡", url: "https://dvagov.sharepoint.com/:p:/r/sites/vasyracuseemrtipsandtricks/_layouts/15/Doc.aspx?sourcedoc=%7B1099600B-DE30-40D4-89F8-7F820E14E9A9%7D&file=How%20to%20create%20a%20quick%20order.pptx&action=edit&mobileredirect=true" },
+      { name: "How to Remove Note in CPRS", icon: "🗑️", url: "https://dvagov.sharepoint.com/:w:/r/sites/vasyracuseemrtipsandtricks/_layouts/15/Doc.aspx?sourcedoc=%7BD3996CA4-FD20-4D95-BD45-B1DC74B16AF3%7D&file=How%20to%20Remove%20Note%20in%20CPRS-NEW%201.docx&action=default&mobileredirect=true" },
+      { name: "Telephone Encounter Tip Sheet", icon: "📞", url: "https://dvagov.sharepoint.com/sites/vasyracuseemrtipsandtricks/Useful%20Tips%20and%20Tricks/Forms/AllItems.aspx?id=%2Fsites%2Fvasyracuseemrtipsandtricks%2FUseful%20Tips%20and%20Tricks%2FTelephone%20Encounter%20Tip%20Sheet%20Addtional%20information%2Epdf&parent=%2Fsites%2Fvasyracuseemrtipsandtricks%2FUseful%20Tips%20and%20Tricks" },
+      { name: "How to Unflag Orders", icon: "🚩", url: "https://dvagov.sharepoint.com/:p:/r/sites/vasyracuseemrtipsandtricks/_layouts/15/Doc.aspx?sourcedoc=%7BB08A8DC5-7C8C-4E15-857F-53675440C5A6%7D&file=Unflag%20Orders.pptx&action=edit&mobileredirect=true" },
+      { name: "How to Set a Self Alert", icon: "🔔", url: "https://dvagov.sharepoint.com/:p:/r/sites/vasyracuseemrtipsandtricks/_layouts/15/Doc.aspx?sourcedoc=%7B4C56FFA5-2195-4440-B680-C68269F035E9%7D&file=Using%20Tickler%20Alerts.pptx&action=edit&mobileredirect=true" }
+    ]},
+    { section: "How-To Guides", em: "📘", cat: "howtos", links: [
+      { name: "How to Order Anticoag Meds", icon: "🩸", url: "https://brookecarter1.github.io/ACRequest/" },
+      { name: "How to Place a NF Request", icon: "📋", url: "https://brookecarter1.github.io/NFGuide/" },
+      { name: "How to Add a Template", icon: "📄", url: "https://brookecarter1.github.io/Template/" },
+      { name: "How to Order In-Clinic Psych Meds", icon: "💉", url: "https://brookecarter1.github.io/Psychinjection/" },
+      { name: "National Controlled Substance Note Guide", icon: "🔒", url: "https://brookecarter1.github.io/NationalControlled/" },
+      { name: "Fax Folder Management", icon: "📠", url: "https://brookecarter1.github.io/FaxFolderManagement/" },
+      { name: "Schedule Scrubbing Guide", icon: "🧽", url: "https://brookecarter1.github.io/Scrubbing/" },
+      { name: "EQM Management Guide", icon: "📊", url: "https://brookecarter1.github.io/eqm/" },
+      { name: "Daily Huddle Guide", icon: "👥", url: "https://brookecarter1.github.io/DailyHuddle/" },
+      { name: "2 Day Discharge Process", icon: "🏥", url: "https://brookecarter1.github.io/2DayDischargeProcess/" },
+      { name: "Consult Guide", icon: "📑", url: "https://brookecarter1.github.io/ConsultGuide/" },
+      { name: "VISTA Printing", icon: "🖨️", url: "https://brookecarter1.github.io/VistaPrintingg/" },
+      { name: "VISTA Scanning Instructions", icon: "📄", url: "https://brookecarter1.github.io/Scanning/" },
+      { name: "How to Send a RI-COH Letter", icon: "✉️", url: "https://brookecarter1.github.io/RI-COHLetterInstructions/" },
+      { name: "Capturing Secure Message Workload Credit", icon: "📊", url: "https://brookecarter1.github.io/SecureMessagingWorkloadCredit/" },
+      { name: "Tips and Tricks", icon: "💡", url: "https://brookecarter1.github.io/TipsandTricks/" }
+    ]},
+    { section: "Directories", em: "📇", cat: "directories", links: [
+      { name: "Important Phone Numbers", icon: "☎️", url: "https://brookecarter1.github.io/ImportantPhoneNumbers/" },
+      { name: "Clinical Pharmacy Directory", icon: "💊", url: "https://brookecarter1.github.io/ClinicalPharmDirectory/" },
+      { name: "Nurse Care Manager Directory", icon: "👩‍⚕️", url: "https://brookecarter1.github.io/NCMDirectory-/" }
+    ]},
+    { section: "Veteran Benefits & Coverage", em: "🎖️", cat: "benefits", links: [
+      { name: "VA Copay Rates", icon: "💵", url: "https://brookecarter1.github.io/VACopay/" },
+      { name: "UC and ED Coverage", icon: "🚑", url: "https://brookecarter1.github.io/UCandED/" },
+      { name: "VA Dental Insurance Program", icon: "🦷", url: "https://brookecarter1.github.io/VADIP/" }
+    ]},
+    { section: "Awards & Recognition", em: "🏆", cat: "awards", links: [
+      { name: "VA Gratitude App", icon: "🙏", url: "https://apps.gov.powerapps.us/play/e/default-e95f1b23-abaf-45ee-821d-b7ab251ab3bf/a/a5260837-4abc-4a18-979c-25e40726ae8f?tenantId=e95f1b23-abaf-45ee-821d-b7ab251ab3bf&source=portal&skipAppMetadata=true" },
+      { name: "I-CARE Nomination Form", icon: "💗", url: "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=Ixtf6a-r7kWCHberJRqzvw5KhncS8SZGnXWDikbR-P9URFhFOUE5Q0hSSTJJWTVYRDZSQUFKUU5TWC4u" },
+      { name: "DAISY Nomination Form", icon: "🌼", url: "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=Ixtf6a-r7kWCHberJRqzv2QtJdDozdtDkiFe_GKd4FpUMjVWSzNNTDNRUUk0UDFOUUJGT0FFRTFHMi4u" },
+      { name: "PETALS Award Nomination Form", icon: "🌸", url: "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=Ixtf6a-r7kWCHberJRqzv2QtJdDozdtDkiFe_GKd4FpUNTVOMlZGUUZZUEJNSFdUVDVNNUlDTjlTMC4u" },
+      { name: "Syracuse VAMC Staff Shoutout", icon: "📣", url: "https://forms.cloud.microsoft/pages/responsepage.aspx?id=Ixtf6a-r7kWCHberJRqzv-FHgGfYmeZMtYEg4nfdKJxUQ0lEQUJaNVJYRzM4RERYMTUyTVBIRURESC4u" }
+    ]}
+  ];
+
+  var routes = [
+    { want: "Order anticoagulation meds (DOAC / Afib)", dest: "Anticoag Request Guide", icon: "🩸", url: "https://brookecarter1.github.io/ACRequest/", keys: "doac dvt pe afib flutter blood thinner warfarin eliquis" },
+    { want: "Place a non-formulary request", dest: "NF Request Guide", icon: "📋", url: "https://brookecarter1.github.io/NFGuide/", keys: "non formulary cfu criteria for use medication not listed" },
+    { want: "Order in-clinic psych injections", dest: "Psych Injection Guide", icon: "💉", url: "https://brookecarter1.github.io/Psychinjection/", keys: "psych mental health injection abilify gui mail pharmacy" },
+    { want: "Order a controlled substance", dest: "Controlled Substance Note Guide", icon: "🔒", url: "https://brookecarter1.github.io/NationalControlled/", keys: "opioid benzo stimulant pdmp uds narcotic" },
+    { want: "Add a note template", dest: "How to Add a Template", icon: "📄", url: "https://brookecarter1.github.io/Template/", keys: "template cprs my templates boilerplate" },
+    { want: "Send a mailed letter to a Veteran", dest: "Ricoh Letter Guide", icon: "✉️", url: "https://brookecarter1.github.io/RI-COHLetterInstructions/", keys: "ricoh planetpress mail letter print historical note" },
+    { want: "Scan a document into VISTA", dest: "VISTA Scanning Instructions", icon: "🖨️", url: "https://brookecarter1.github.io/Scanning/", keys: "scan vista imaging document" },
+    { want: "Print a clinic schedule from VISTA", dest: "VISTA Printing", icon: "📑", url: "https://brookecarter1.github.io/VistaPrintingg/", keys: "print schedule vista clinic app" },
+    { want: "Get workload credit for a secure message", dest: "Secure Message Workload Guide", icon: "📊", url: "https://brookecarter1.github.io/SecureMessagingWorkloadCredit/", keys: "workload credit secure message cpt increment of time myhealthevet" },
+    { want: "Do a post-discharge follow-up", dest: "2 Day Discharge Process", icon: "🏥", url: "https://brookecarter1.github.io/2DayDischargeProcess/", keys: "discharge dc follow up 2 day post discharge contact" },
+    { want: "Scrub my schedule", dest: "Schedule Scrubbing Guide", icon: "🧽", url: "https://brookecarter1.github.io/Scrubbing/", keys: "scrub schedule new patient established rooming prep" },
+    { want: "Run a daily huddle", dest: "Daily Huddle Guide", icon: "👥", url: "https://brookecarter1.github.io/DailyHuddle/", keys: "huddle pact team morning meeting" },
+    { want: "Work my EQM / quality measures", dest: "EQM Management Guide", icon: "✅", url: "https://brookecarter1.github.io/eqm/", keys: "eqm quality measures a1c metrics screening outreach" },
+    { want: "Manage the fax folder", dest: "Fax Folder Management", icon: "📠", url: "https://brookecarter1.github.io/FaxFolderManagement/", keys: "fax folder scan rename outside records labs" },
+    { want: "Handle a community care consult / SEOC", dest: "Consult Guide", icon: "📑", url: "https://brookecarter1.github.io/ConsultGuide/", keys: "consult seoc community care authorization cpt referral" },
+    { want: "Look up a medication", dest: "VA Formulary", icon: "📖", url: "https://www.va.gov/formularyadvisor/", keys: "formulary drug medication lookup search cfu" },
+    { want: "Look up a Veteran's copay", dest: "VA Copay Rates", icon: "💵", url: "https://brookecarter1.github.io/VACopay/", keys: "copay cost rates priority group medication urgent" },
+    { want: "Explain urgent care vs. ED coverage", dest: "UC & ED Coverage", icon: "🚑", url: "https://brookecarter1.github.io/UCandED/", keys: "urgent care emergency ed coverage copay notification" },
+    { want: "Help a Veteran get dental insurance", dest: "VADIP Guide", icon: "🦷", url: "https://brookecarter1.github.io/VADIP/", keys: "dental vadip insurance delta metlife teeth" },
+    { want: "Find a phone number", dest: "Important Phone Numbers", icon: "☎️", url: "https://brookecarter1.github.io/ImportantPhoneNumbers/", keys: "phone number crisis line pharmacy audiology billing contact" },
+    { want: "Reach a clinical pharmacist", dest: "Clinical Pharmacy Directory", icon: "💊", url: "https://brookecarter1.github.io/ClinicalPharmDirectory/", keys: "pharmacy pharmacist directory anticoag pact who covers" },
+    { want: "Reach a Nurse Care Manager", dest: "NCM Directory", icon: "👩‍⚕️", url: "https://brookecarter1.github.io/NCMDirectory-/", keys: "ncm nurse care manager surrogate specialty cardiology" },
+    { want: "Recognize a coworker / submit an award", dest: "I-CARE Nomination Form", icon: "🏆", url: "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=Ixtf6a-r7kWCHberJRqzvw5KhncS8SZGnXWDikbR-P9URFhFOUE5Q0hSSTJJWTVYRDZSQUFKUU5TWC4u", keys: "award recognition daisy petals icare shoutout gratitude nominate" }
+  ];
+
+  var clSections = [
+    { title: "Start of Day", em: "🌅", badge: "am", items: [
+      { t: "Scrub tomorrow's schedule", h: "Verify visit types, labs ordered, records gathered" },
+      { t: "Pull the discharge list", h: "Updated ~9:30 AM EST · Select All event types" },
+      { t: "Complete post-discharge contacts", h: "Banner-named PACT member · Post Discharge Contact note" },
+      { t: "Attend / run the daily huddle", h: "Staffing, high-risk Veterans, coordination, owners" },
+      { t: "Check huddle planning tool & CAN scores", h: "Flag CAN over 95 for LST note" }
+    ]},
+    { title: "Throughout the Day", em: "🔄", badge: "day", items: [
+      { t: "Check the fax folder (multiple times)", h: "Rename: Last name + Last 4 + doc type; scan/alert as needed" },
+      { t: "Work CPRS alerts", h: "New telephone encounter note each time — not an addendum" },
+      { t: "Respond to Secure Messages", h: "Save as CPRS note; capture workload credit / increment of time" },
+      { t: "EQM outreach on due Veterans", h: "Validate before outreach; combine care gaps into one contact" },
+      { t: "Address clinical reminders", h: "Resolve reminders that are due during encounters" }
+    ]},
+    { title: "End of Day", em: "🌆", badge: "pm", items: [
+      { t: "Sign all open notes", h: "Nothing left unsigned" },
+      { t: "Check out all encounters", h: "Confirm on the CPRS cover page" },
+      { t: "Close out / hand off pending items", h: "Confirm owner for anything unresolved" }
+    ]},
+    { title: "Weekly", em: "📅", badge: "wk", items: [
+      { t: "Review the EQM outlier list", h: "Once a week — review, validate, outreach cycle" }
+    ]}
+  ];
+  var clTotal = 0;
+  clSections.forEach(function(s){ clTotal += s.items.length; });
+  function clKey(){ var d = new Date(); return 'cboc_checklist_' + d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate(); }
+  var clState = store.get(clKey()) || {};
+
+  // ---- Manager Tools ----
+  var managerGroups = [
+    { section: "Huddle Board Links", em: "📋", links: [
+      { name: "Huddle Board East (Home)", icon: "🏠", url: "https://stginternational.sharepoint.com/:u:/r/sites/EASTERNREGIONCBOCLeaders-HUDDLEBOARDEAST/SitePages/Home.aspx?csf=1&web=2&share=IQDJ2GtZZOqIQJ5wvBAeMcVuAdD6U1zJw_Qn5G5_aXNGjhE&e=1mxkeP" },
+      { name: "RTCs", icon: "📈", url: "https://app.powerbigov.us/groups/me/apps/057a6693-7190-4fd4-9491-f8a038913689/reports/68bf10de-fd17-4acd-8d11-c7a31372004e/f3f116ca0d5f1e65b398" },
+      { name: "Action Required", icon: "⚠️", url: "https://vaww.pbi.cdw.va.gov/PBIRS/Pages/ReportViewer.aspx?%2fFRE%2fD01_VISN02%2fSSRS%2fAdmin%2fAction+Required+Daily+Monitor&rs:Command=Render" },
+      { name: "2 Day D/C", icon: "📅", url: "https://reports.vssc.med.va.gov/ReportServer/Pages/ReportViewer.aspx?/PC/Almanac/DailyDischFUOrig&rs:Command=Render" },
+      { name: "Secure Messaging", icon: "✉️", url: "https://smclinician.myhealth.va.gov/home" },
+      { name: "PATS-R", icon: "📋", url: "https://dvagov-veft.crm9.dynamics.com/main.aspx?appid=c29991dc-751f-4093-a820-facf40e7194c&pagetype=dashboard&id=8bbedc4c-b441-4037-91da-d024b3fdb76d&type=system&_canOverride=true&lid=1785166448186" }
+    ]},
+    { section: "IPR Links", em: "📊", links: [
+      { name: "Eastern CBOC Leaders (IPR Home)", icon: "🏠", url: "https://stginternational.sharepoint.com/:u:/r/sites/EASTERNREGION-UtilizationTracker/SitePages/Home.aspx?csf=1&web=2&share=IQASScJUV9CtRZwJrvknNrbEAXBzcLXPxrn9nw-Dd1ipdZw&e=eIyldA" },
+      { name: "ICB", icon: "📥", url: "https://pyramid.cdw.va.gov/direct/?id=d868670a-7638-48b1-9d00-6a35867a45a7" },
+      { name: "Wait Times", icon: "⏱️", url: "https://pyramid.cdw.va.gov/direct/?id=f34c65f5-6998-4d2a-b850-d35f84b4cdbc" },
+      { name: "Compass", icon: "🧭", url: "https://reports.vssc.med.va.gov/ReportServer/Pages/ReportViewer.aspx?%2fPC%2fPACTCompassCubeSSRS%2fMainMenu&rs:Command=Render" },
+      { name: "Documentation", icon: "📝", url: "https://vaww.pbi.cdw.va.gov/pbi_rs/report/GPE/PCS_PACTProfile/SSRS/PACT%20Profile/PACT%20Profile" },
+      { name: "Naloxone", icon: "🚑", url: "https://vaww.pbi.cdw.va.gov/PBIRS/Pages/ReportViewer.aspx?/GPE/PBM_AD/SSRS/OEND/OENDDashboard" },
+      { name: "Cancellation Rate", icon: "❌", url: "https://reports.vssc.med.va.gov/ReportServer/Pages/ReportViewer.aspx?%2fPMR%2fPerformanceMeasures%2fPerformanceMeasureReport&rs:Command=Render" },
+      { name: "Composite Scores", icon: "🎯", url: "https://vaww.pbi.cdw.va.gov/PBI_RS/report/GPE/API_PMMAT/SSRS/ClinicalMeasurement/OutpatientSitesOfCare?rs:Embed=true" },
+      { name: "SHEP", icon: "😊", url: "https://pyramid.cdw.va.gov/direct/?id=236842b6-772d-4ff6-84ad-24d5b0ba7ef0" }
+    ]}
+  ];
+
+  var managerSub = "links"; // links | daily | weekly | monthly
+
+  var mgrDaily = [
+    { title: "Daily Checklist", em: "🌅", badge: "day", sub: "Complete these each day", items: [
+      { t: "2 Day D/C", h: "" },
+      { t: "Open Encounters", h: "" },
+      { t: "Secure Messages", h: "" },
+      { t: "PATS-R", h: "" },
+      { t: "RTCs", h: "" },
+      { t: "Huddle Board Updated", h: "" },
+      { t: "Daily QC Logs", h: "" }
+    ]}
+  ];
+
+  var mgrWeekly = [
+    { title: "Weekly Checklist", em: "📅", badge: "wk", sub: "Complete these each week", items: [
+      { t: "Timesheet Review", h: "" },
+      { t: "Leave Requests", h: "" },
+      { t: "Grid Utilization", h: "" },
+      { t: "Panel Management", h: "" },
+      { t: "Supply Ordering", h: "" },
+      { t: "Vendor Follow Up", h: "" },
+      { t: "Weekly QC Logs", h: "" }
+    ]}
+  ];
+
+  var mgrMonthly = [
+    { title: "Monthly Checklist", em: "🗓️", badge: "mo", sub: "Complete these each month", items: [
+      { t: "Peer Review Charts", h: "" },
+      { t: "Invoicing", h: "" },
+      { t: "IPR", h: "" },
+      { t: "Lab Audit", h: "" },
+      { t: "JC Tracer", h: "" },
+      { t: "Update EQM", h: "" },
+      { t: "Update 6 Part Folders", h: "" },
+      { t: "Update Competencies (if due)", h: "" },
+      { t: "Staff Meeting", h: "" },
+      { t: "Monthly QC Logs", h: "" }
+    ]}
+  ];
+
+  function mgrDailyKey(){ var d = new Date(); return 'cboc_mgr_daily_' + d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate(); }
+  function mgrWeeklyKey(){ var d = new Date(); var oneJan = new Date(d.getFullYear(),0,1); var wk = Math.ceil((((d - oneJan) / 86400000) + oneJan.getDay() + 1) / 7); return 'cboc_mgr_weekly_' + d.getFullYear() + '-W' + wk; }
+  function mgrMonthlyKey(){ var d = new Date(); return 'cboc_mgr_monthly_' + d.getFullYear() + '-' + (d.getMonth()+1); }
+
+  var allLinks = {};
+  data.forEach(function(s){ s.links.forEach(function(l){ allLinks[l.url] = l; }); });
+  managerGroups.forEach(function(s){ s.links.forEach(function(l){ allLinks[l.url] = l; }); });
+  var collapsed = new Set();
+
+  var content = document.getElementById('content');
+  var searchEl = document.getElementById('search');
+  var filtersEl = document.getElementById('filters');
+  var noResults = document.getElementById('noResults');
+
+  function esc(s){ return s.replace(/"/g, '&quot;'); }
+
+  function cardHTML(l){
+    var on = starred.has(l.url) ? 'on' : '';
+    var sym = starred.has(l.url) ? '★' : '☆';
+    return '<a class="card" href="'+l.url+'" target="_blank" rel="noopener noreferrer">'+
+      '<span class="icon">'+l.icon+'</span><span class="name">'+l.name+'</span>'+
+      '<button class="star '+on+'" data-url="'+esc(l.url)+'" title="Pin to Most Used">'+sym+'</button></a>';
+  }
+
+  function buildSection(sec, matches, extraClass){
+    var wrap = document.createElement('div');
+    wrap.className = 'section' + (collapsed.has(sec.section) ? ' collapsed' : '') + (extraClass ? ' '+extraClass : '');
+    var title = document.createElement('div');
+    title.className = 'section-title';
+    title.innerHTML = '<span class="em">'+sec.em+'</span> '+sec.section+' <span class="count">'+matches.length+'</span><span class="chev">▼</span>';
+    title.addEventListener('click', function(){
+      if (collapsed.has(sec.section)) collapsed.delete(sec.section); else collapsed.add(sec.section);
+      render();
+    });
+    wrap.appendChild(title);
+    var grid = document.createElement('div');
+    grid.className = 'grid';
+    grid.innerHTML = matches.map(cardHTML).join('');
+    wrap.appendChild(grid);
+    return wrap;
+  }
+
+  function renderBrowse(f){
+    var anyShown = false;
+    var starredLinks = Array.from(starred).map(function(u){ return allLinks[u]; }).filter(Boolean).filter(function(l){ return l.name.toLowerCase().indexOf(f) > -1; });
+    if (starred.size){
+      if (starredLinks.length){ content.appendChild(buildSection({section:"Most Used", em:"⭐"}, starredLinks, 'mostused')); anyShown = true; }
+    } else if (f === "" && activeFilter === "all"){
+      var wrap = document.createElement('div');
+      wrap.className = 'section mostused';
+      wrap.innerHTML = '<div class="section-title"><span class="em">⭐</span> Most Used <span class="chev">&nbsp;</span></div><div class="mostused-empty">Tap the ☆ star on any tile to pin your most-used links here.</div>';
+      content.appendChild(wrap);
+    }
+    data.forEach(function(sec){
+      if (activeFilter !== "all" && sec.cat !== activeFilter) return;
+      var matches = sec.links.filter(function(l){ return l.name.toLowerCase().indexOf(f) > -1; });
+      if (!matches.length) return;
+      anyShown = true;
+      content.appendChild(buildSection(sec, matches));
+    });
+    noResults.style.display = anyShown ? 'none' : 'block';
+    var starBtns = content.querySelectorAll('.star');
+    for (var i=0;i<starBtns.length;i++){
+      starBtns[i].addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); toggleStar(this.getAttribute('data-url')); });
+    }
+  }
+
+  function renderRouter(f){
+    var lead = document.createElement('div');
+    lead.className = 'router-lead';
+    var matches = routes.filter(function(r){
+      if (r.want.toLowerCase().indexOf(f) > -1 || r.dest.toLowerCase().indexOf(f) > -1 || r.keys.indexOf(f) > -1) return true;
+      return f.split(' ').some(function(w){ return w && (r.want.toLowerCase().indexOf(w) > -1 || r.keys.indexOf(w) > -1); });
+    });
+    lead.textContent = f ? (matches.length + ' match' + (matches.length===1?'':'es')) : 'Tap what you\u2019re trying to do:';
+    content.appendChild(lead);
+    matches.forEach(function(r){
+      var a = document.createElement('a');
+      a.className = 'rrow';
+      a.href = r.url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+      a.innerHTML = '<span class="ic">'+r.icon+'</span><span class="body"><span class="want">'+r.want+'</span><span class="goes"><span class="arrow">→</span> '+r.dest+'</span></span><span class="chev">›</span>';
+      content.appendChild(a);
+    });
+    noResults.style.display = matches.length ? 'none' : 'block';
+  }
+
+  function renderChecklist(){
+    noResults.style.display = 'none';
+
+    var dateline = document.createElement('div');
+    dateline.className = 'cl-dateline';
+    dateline.textContent = new Date().toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+    content.appendChild(dateline);
+
+    var prog = document.createElement('div');
+    prog.className = 'cl-progress';
+    prog.innerHTML =
+      '<div class="cl-ring"><svg width="56" height="56">'+
+      '<circle cx="28" cy="28" r="24" stroke="#e8eef4" stroke-width="6" fill="none"></circle>'+
+      '<circle id="clRing" cx="28" cy="28" r="24" stroke="#0a5ca8" stroke-width="6" fill="none" stroke-linecap="round" stroke-dasharray="150.8" stroke-dashoffset="150.8"></circle>'+
+      '</svg><span class="pct" id="clPct">0%</span></div>'+
+      '<div class="cl-ptxt"><div class="big" id="clBig">Ready to start</div><div class="small" id="clSub">0 of '+clTotal+' tasks complete</div></div>'+
+      '<button class="cl-reset" id="clReset">Reset day</button>';
+    content.appendChild(prog);
+
+    clSections.forEach(function(sec, si){
+      var wrap = document.createElement('div');
+      wrap.className = 'cl-section';
+      var html = '<h2><span class="em">'+sec.em+'</span> '+sec.title+'<span class="cbadge '+sec.badge+'">'+sec.badge.toUpperCase()+'</span></h2>';
+      sec.items.forEach(function(it, ii){
+        var id = si+'_'+ii;
+        var done = clState[id] ? ' done' : '';
+        html += '<div class="cl-item'+done+'" data-id="'+id+'"><span class="cl-cb"></span><span class="cl-txt">'+it.t+'<span class="hint">'+it.h+'</span></span></div>';
+      });
+      wrap.innerHTML = html;
+      content.appendChild(wrap);
+    });
+
+    var note = document.createElement('div');
+    note.className = 'cl-note';
+    note.textContent = 'Your checkmarks save automatically and reset each morning.';
+    content.appendChild(note);
+
+    function updateProgress(){
+      var done = 0;
+      for (var k in clState){ if (clState[k]) done++; }
+      var pct = clTotal ? Math.round(done/clTotal*100) : 0;
+      document.getElementById('clPct').textContent = pct + '%';
+      document.getElementById('clRing').style.strokeDashoffset = 150.8 * (1 - pct/100);
+      document.getElementById('clSub').textContent = done + ' of ' + clTotal + ' tasks complete';
+      document.getElementById('clBig').textContent = pct===100 ? "All done — great work! 🎉" : (pct>=60 ? "Great progress" : (pct>0 ? "Keep it going" : "Ready to start"));
+    }
+
+    var items = content.querySelectorAll('.cl-item');
+    for (var i=0;i<items.length;i++){
+      items[i].addEventListener('click', function(){
+        var id = this.getAttribute('data-id');
+        clState[id] = !clState[id];
+        this.classList.toggle('done', !!clState[id]);
+        store.set(clKey(), clState);
+        updateProgress();
+      });
+    }
+    document.getElementById('clReset').addEventListener('click', function(){
+      clState = {};
+      store.set(clKey(), clState);
+      var its = content.querySelectorAll('.cl-item');
+      for (var j=0;j<its.length;j++){ its[j].classList.remove('done'); }
+      updateProgress();
+    });
+    updateProgress();
+  }
+
+  function buildChecklist(secs, state, saveKeyFn){
+    var total = 0;
+    secs.forEach(function(s){ total += s.items.length; });
+
+    var prog = document.createElement('div');
+    prog.className = 'cl-progress';
+    prog.innerHTML =
+      '<div class="cl-ring"><svg width="56" height="56">'+
+      '<circle cx="28" cy="28" r="24" stroke="#e8eef4" stroke-width="6" fill="none"></circle>'+
+      '<circle class="clRing" cx="28" cy="28" r="24" stroke="#0a5ca8" stroke-width="6" fill="none" stroke-linecap="round" stroke-dasharray="150.8" stroke-dashoffset="150.8"></circle>'+
+      '</svg><span class="pct clPct">0%</span></div>'+
+      '<div class="cl-ptxt"><div class="big clBig">Ready to start</div><div class="small clSub">0 of '+total+' tasks complete</div></div>'+
+      '<button class="cl-reset clReset">Reset</button>';
+    content.appendChild(prog);
+
+    secs.forEach(function(sec, si){
+      var wrap = document.createElement('div');
+      wrap.className = 'cl-section';
+      var subHtml = sec.sub ? '<div class="cl-note" style="text-align:left;margin:0 0 6px;">'+sec.sub+'</div>' : '';
+      var html = '<h2><span class="em">'+sec.em+'</span> '+sec.title+'<span class="cbadge '+sec.badge+'">'+sec.badge.toUpperCase()+'</span></h2>' + subHtml;
+      sec.items.forEach(function(it, ii){
+        var id = si+'_'+ii;
+        var done = state[id] ? ' done' : '';
+        var hint = it.h ? '<span class="hint">'+it.h+'</span>' : '';
+        html += '<div class="cl-item'+done+'" data-id="'+id+'"><span class="cl-cb"></span><span class="cl-txt">'+it.t+hint+'</span></div>';
+      });
+      wrap.innerHTML = html;
+      content.appendChild(wrap);
+    });
+
+    var note = document.createElement('div');
+    note.className = 'cl-note';
+    note.textContent = 'Checkmarks save automatically and reset each period.';
+    content.appendChild(note);
+
+    function updateProgress(){
+      var done = 0; for (var k in state){ if (state[k]) done++; }
+      var pct = total ? Math.round(done/total*100) : 0;
+      content.querySelector('.clPct').textContent = pct + '%';
+      content.querySelector('.clRing').style.strokeDashoffset = 150.8 * (1 - pct/100);
+      content.querySelector('.clSub').textContent = done + ' of ' + total + ' tasks complete';
+      content.querySelector('.clBig').textContent = pct===100 ? "All done — great work! 🎉" : (pct>=60 ? "Great progress" : (pct>0 ? "Keep it going" : "Ready to start"));
+    }
+    var items = content.querySelectorAll('.cl-item');
+    for (var i=0;i<items.length;i++){
+      items[i].addEventListener('click', function(){
+        var id = this.getAttribute('data-id');
+        state[id] = !state[id];
+        this.classList.toggle('done', !!state[id]);
+        store.set(saveKeyFn(), state);
+        updateProgress();
+      });
+    }
+    content.querySelector('.clReset').addEventListener('click', function(){
+      for (var kk in state){ delete state[kk]; }
+      store.set(saveKeyFn(), state);
+      var its = content.querySelectorAll('.cl-item');
+      for (var j=0;j<its.length;j++){ its[j].classList.remove('done'); }
+      updateProgress();
+    });
+    updateProgress();
+  }
+
+  function renderManager(f){
+    // sub-toggle bar
+    var bar = document.createElement('div');
+    bar.className = 'filters';
+    bar.style.marginTop = '0';
+    bar.style.marginBottom = '18px';
+    var subs = [ ['links','🔗 Links'], ['daily','🌅 Daily'], ['weekly','📅 Weekly'], ['monthly','🗓️ Monthly'] ];
+    subs.forEach(function(s){
+      var b = document.createElement('button');
+      b.className = 'filter' + (managerSub === s[0] ? ' active' : '');
+      b.textContent = s[1];
+      b.addEventListener('click', function(){ managerSub = s[0]; searchEl.style.display = (managerSub==='links') ? 'block' : 'none'; render(); });
+      bar.appendChild(b);
+    });
+    content.appendChild(bar);
+
+    if (managerSub === 'links'){
+      var anyShown = false;
+      managerGroups.forEach(function(sec){
+        var matches = sec.links.filter(function(l){ return l.name.toLowerCase().indexOf(f) > -1; });
+        if (!matches.length) return;
+        anyShown = true;
+        content.appendChild(buildSection(sec, matches));
+      });
+      noResults.style.display = anyShown ? 'none' : 'block';
+      var starBtns = content.querySelectorAll('.star');
+      for (var i=0;i<starBtns.length;i++){
+        starBtns[i].addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); toggleStar(this.getAttribute('data-url')); });
+      }
+    } else {
+      noResults.style.display = 'none';
+      var dl = document.createElement('div');
+      dl.className = 'cl-dateline';
+      dl.textContent = new Date().toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+      content.appendChild(dl);
+      if (managerSub === 'daily'){ var ds = store.get(mgrDailyKey()) || {}; buildChecklist(mgrDaily, ds, mgrDailyKey); }
+      else if (managerSub === 'weekly'){ var ws = store.get(mgrWeeklyKey()) || {}; buildChecklist(mgrWeekly, ws, mgrWeeklyKey); }
+      else { var ms = store.get(mgrMonthlyKey()) || {}; buildChecklist(mgrMonthly, ms, mgrMonthlyKey); }
+    }
+  }
+
+  function render(){
+    content.innerHTML = "";
+    var f = searchEl.value.trim().toLowerCase();
+    if (mode === "browse") renderBrowse(f);
+    else if (mode === "router") renderRouter(f);
+    else if (mode === "manager") renderManager(f);
+    else renderChecklist();
+  }
+
+  filters.forEach(function(fl){
+    var b = document.createElement('button');
+    b.className = 'filter' + (fl.key === 'all' ? ' active' : '');
+    b.textContent = fl.label;
+    b.addEventListener('click', function(){
+      activeFilter = fl.key;
+      var all = document.querySelectorAll('.filter');
+      for (var i=0;i<all.length;i++){ all[i].classList.remove('active'); }
+      b.classList.add('active');
+      render();
+    });
+    filtersEl.appendChild(b);
+  });
+
+  var mB = document.getElementById('modeBrowse');
+  var mR = document.getElementById('modeRouter');
+  var mC = document.getElementById('modeChecklist');
+  var mM = document.getElementById('modeManager');
+  function setMode(m){
+    mode = m;
+    mB.classList.toggle('active', m==='browse');
+    mR.classList.toggle('active', m==='router');
+    mC.classList.toggle('active', m==='checklist');
+    mM.classList.toggle('active', m==='manager');
+    filtersEl.style.display = (m==='browse') ? 'flex' : 'none';
+    searchEl.style.display = (m==='checklist') ? 'none' : 'block';
+    if (m==='browse') searchEl.placeholder = '🔍  Search tools and guides…';
+    else if (m==='router') searchEl.placeholder = '🔍  Type what you need (e.g. anticoag, letter, copay)…';
+    else if (m==='manager') { searchEl.placeholder = '🔍  Search manager tools…'; searchEl.style.display = (managerSub==='links') ? 'block' : 'none'; }
+    render();
+  }
+  mB.addEventListener('click', function(){ setMode('browse'); });
+  mR.addEventListener('click', function(){ setMode('router'); });
+  mC.addEventListener('click', function(){ setMode('checklist'); });
+  mM.addEventListener('click', function(){ setMode('manager'); });
+
+  searchEl.addEventListener('input', render);
+  render();
+</script>
+</body>
+</html>
